@@ -32,18 +32,49 @@ FLOYD WARSHALL
 1. Brute force algo
 2. Three loops (k , i , j) take mindis = min(mindis[i][j], minDis[i][k]+minDis[k][j])
 
-PRIM'S ALORITHM                                                                {T.C = O(E*LOGV), S.C = O(V^2)}
+PRIM'S ALGORITHM                                                                {T.C = O(E*LOGV), S.C = O(V^2)}
 //required adjacency list
 //vertex based
 //Data Structures = key(n, INT_MAX), mst(n, false), parent(n, -1)
-/*ALGORITHM
+ALGORITHM
 1. Choose any vertex
 2. Take minimum weight path.
 3. Take care of previous paths as well.
 4. Cycle should not be created.
 5. Intermediate result is always connected
-*/
+
+//KRUSKAL ALGORITHM
+//require vector<vector<int>>vec               //{u, v, w}
+ALGORITHM
+1. Take a vector and store {u, v, w}
+2. sort the vector on the basis of its weight.
+3. then take sum, and iterate on vec
+4. if the parent of u and v not same then take Union and sum+= w
+5. finally return sum(minsum spanning tree)
+
+//STRONGLY CONNECTED COMPONENTS (SCC)
+ALGORITHM
+1. sort the adjacency list using topological sort
+2. create a transpose graph
+3. dfs call on basis of above ordering (stack ordering)
+
+//EULERIAN PATH
+1. A Path of edges that visits all the edges in a graph exactly once.
+2. Not all graphs have eulerian path.
+3. All node have even degree except (2 nodes {starting & ending})
+4. If any node degree > 2 then it is not having Eulerian Path.
+//EULERIAN CIRCUIT
+1. An eulerian path which starts and ends on the same node.
+2. If the path is eulerian circuit then we can start any node(it will always ends on same node).
+3. All vertices with non zero degree node need to belong to a single connected component. 
+    (non zero degree nodes must be connected via a single component {one dfs only})
+4. If all vertices have even degrees then it always a Eulerian Circuit.
+//SEMI EULERIAN GRAPH
+1. Eulerian Path Only (starting and ending node degree is always odd and other nodes have even degree)
+2. Not Eulerian circuit.
 /*---------------------------------------------------------------------------------------------------------------------*/
+
+
 //01. DFS OF GRAPH                                              {T.C = O(N+M / V+E), S.C = O(N+M / V+E)}
 /*
 We required 2 DS (ans, vis(bool)) and also initialize nodeindex = 0,  mark vis[node] = 1 and push node in ans,  now traverse adj[node],
@@ -1932,4 +1963,373 @@ Notice that there is a unique path between every pair of points.
 Example 2:
 Input: points = [[3,12],[-2,5],[-4,1]]
 Output: 18
+*/
+
+
+//23. MINIMUM SPANNING TREE {KRUSKAL ALGORITHM}                    {T.C = O(E*LOGV), S.C = O(V^2)}
+/*
+1. Take a vector and store {u, v, w}
+2. sort the vector on the basis of its weight.
+3. then take sum, and iterate on vec
+4. if the parent of u and v not same then take Union and sum+= w
+5. finally return sum(minsum spanning tree)
+*/
+class Solution
+{
+	public:
+	vector<int>parent;
+	vector<int>rank;
+	int find(int i){
+	    if(i == parent[i]){
+	        return i;
+	    }
+	    return parent[i] = find(parent[i]);
+	}
+	void Union(int x, int y){
+	    int x_parent = find(x);
+	    int y_parent = find(y);
+	    
+	    if(x_parent == y_parent){
+	        return;
+	    }
+	    if(rank[x_parent] > rank[y_parent]){
+	        parent[y_parent] = x_parent;
+	    }else if(rank[x_parent] < rank[y_parent]){
+	        parent[x_parent] = y_parent;
+	    }else{
+	        parent[x_parent] = y_parent;
+	        rank[y_parent]++;
+	    }
+	}
+	int kruskal(vector<vector<int>>&vec){
+	    int sum = 0;
+	    
+	    for(auto it : vec){
+	        int u = it[0];
+	        int v = it[1];
+	        int w = it[2];
+	        
+	        int u_parent = find(u);
+	        int v_parent = find(v);
+	        
+	        if(u_parent != v_parent){
+	            Union(u, v);
+	            sum += w;
+	        }
+	    }
+	    
+	    return sum;
+	}
+    int spanningTree(int V, vector<vector<int>> adj[]){
+        parent.resize(V);
+        rank.resize(V, 0);
+        for(int i = 0 ; i < V ; i++){
+            parent[i] = i;
+        }
+        
+        vector<vector<int>>vec;
+        for(int u = 0 ; u < V ; u++){
+            for(auto it : adj[u]){
+                int v = it[0];
+                int w = it[1];
+                
+                vec.push_back({u, v, w});
+            }
+        }
+        
+        auto lambda = [&](vector<int>&a, vector<int>&b){
+            return a[2] < b[2];                            //compare on basis of weight 
+        };
+        sort(vec.begin(), vec.end(), lambda);
+        
+        return kruskal(vec);
+    }
+};
+/*
+Example 1:
+Input:
+3 3
+0 1 5
+1 2 3
+0 2 1
+Output:
+4
+Explanation:
+The Spanning Tree resulting in a weight
+of 4 is shown above.
+
+Example 2:
+Input:
+2 1
+0 1 5
+Output:
+5
+Explanation:
+Only one Spanning Tree is possible
+which has a weight of 5.
+*/
+
+
+//24. MIN COST TO CONNECT ALL POINTS                                 {T.C = O(E*LOGV), S.C = O(V^2)}
+/*
+push vec {i, j , dis{abs(x1-x2) + abs(y1-y2)}} , then apply kruskal algo.
+*/
+class Solution {
+public:
+    vector<int>parent;
+    vector<int>rank;
+    int find(int i){
+        if(i == parent[i]){
+            return i;
+        }
+        return parent[i] = find(parent[i]);
+    }
+    void Union(int x, int y){
+        int x_parent = find(x);
+        int y_parent = find(y);
+
+        if(x_parent == y_parent){
+            return;
+        }
+        if(rank[x_parent] > rank[y_parent]){
+            parent[y_parent] = x_parent;
+        }else if(rank[x_parent] < rank[y_parent]){
+            parent[x_parent] = y_parent;
+        }else{ //rank[x_parent] == rank[y_parent]
+            parent[x_parent] = y_parent;
+            rank[y_parent]++;
+        }
+    }
+    int kruskalAlgo(vector<vector<int>>&vec){
+        int sum = 0;
+
+        for(auto it : vec){
+            int u = it[0];
+            int v = it[1];
+            int w = it[2];
+
+            int u_parent = find(u);
+            int v_parent = find(v);
+            if(u_parent != v_parent){
+                Union(u, v);
+                sum += w;
+            }
+        }
+        return sum;
+    }
+    int minCostConnectPoints(vector<vector<int>>& points) {
+        int n = points.size();
+        parent.resize(n);
+        rank.resize(n, 0);
+        for(int i = 0 ;i < n ; i++){
+            parent[i] = i;
+        }
+
+        vector<vector<int>>vec;                                //{node->{node, dis}}
+        for(int i = 0 ; i < n; i++){
+            for(int j = i+1; j < n ; j++){                      //undirected graph (not require back traversal again and again)
+                int x1 = points[i][0];
+                int y1 = points[i][1];
+                int x2 = points[j][0];
+                int y2 = points[j][1];
+
+                int dis = abs(x1-x2) + abs(y1-y2);
+                vec.push_back({i, j, dis});
+            }
+        }
+
+        auto lambda = [&](vector<int>&a, vector<int>&b){
+            return a[2] < b[2];                                //sort according to dis/wt
+        };
+        sort(vec.begin(), vec.end(), lambda);
+        return kruskalAlgo(vec);
+    }
+};
+/*
+Example 1:
+Input: points = [[0,0],[2,2],[3,10],[5,2],[7,0]]
+Output: 20
+Explanation: 
+We can connect the points as shown above to get the minimum cost of 20.
+Notice that there is a unique path between every pair of points.
+
+Example 2:
+Input: points = [[3,12],[-2,5],[-4,1]]
+Output: 18
+*/
+
+
+//25. STRONGLY CONNECTED COMPONENTS {KOSARAJU'S ALGORITHM}                       {T.C = O(V+E), S.C = O(V+E)}
+/*
+1. sort the adjacency list using topological sort
+2. create a transpose graph
+3. dfs call on basis of above ordering (stack ordering)
+*/
+class Solution
+{
+	public:
+	void dfs(vector<vector<int>>&adj, vector<int>&vis, stack<int>&s, int node){
+	    vis[node]  = 1;
+	    
+	    for(auto it : adj[node]){
+	        if(!vis[it]){
+	            dfs(adj, vis, s, it);
+	        }
+	    }
+	    //topo sort logic
+	    s.push(node);
+	}
+	void dfs(vector<vector<int>>&transpose, vector<int>&vis, int node){
+	    vis[node] = 1;
+	    
+	    for(auto it : transpose[node]){
+	        if(!vis[it]){
+	            dfs(transpose, vis, it);
+	        }
+	    }
+	}
+    int kosaraju(int V, vector<vector<int>>& adj)
+    {
+        //step1 sort the adjacency list using topological sort
+        vector<int>vis(V, 0);
+        stack<int>s;
+        for(int i = 0 ; i < V ; i++){
+            if(!vis[i]){
+                dfs(adj, vis, s, i);
+            }
+        }
+        
+        //step2 create a transpose graph
+        vector<vector<int>>transpose(V);
+        for(int i = 0 ; i < V ; i++){
+            vis[i] = 0;                                    //reinitialize visited array
+            for(auto it : adj[i]){
+                transpose[it].push_back(i);
+            }
+        }
+        
+        //step3 dfs call on basis of above ordering (stack ordering)
+        int countSCC = 0;                          //SCC = Strongly Conneted Component
+        while(!s.empty()){
+            int top = s.top();
+            s.pop();
+            if(!vis[top]){
+                countSCC++;
+                dfs(transpose, vis, top);
+            }
+        }
+        return countSCC;
+    }
+};
+/*
+Example 1:
+Input: GRAPH IMAGE
+Output:
+3
+Explanation:
+We can clearly see that there are 3 Strongly
+Connected Components in the Graph
+
+Example 2:
+Input: GRAPH IMAGE
+Output:
+1
+Explanation:
+All of the nodes are connected to each other.
+So, there's only one SCC.
+*/
+
+
+//26. EULER CIRCUIT AND PATH
+/*
+Iterate on adjacency list , check the indegree if(indegree is not equal to 2) count++ , if count == 0 return 2( eulerian circut)
+else if(count == 2) return 1(2 vertexes with odd indegrees (Eulerian paht/semi Eulerian)), else return 0 (neither eulerian circuit or path).
+*/
+class Solution {
+public:
+	int isEularCircuit(int V, vector<int>adj[]){
+	    int count = 0;
+	    //check indegree of each vertex
+	    for(int i = 0 ; i < V ; i++){
+	        if(adj[i].size() != 2){             //adj[i].size = no. of edges connected to a vertex (indegree)
+	            count++;
+	        }
+	    }
+	    if(count == 0){                        //0 vertexes with odd indegrees (Eulerian circuit)
+	        return 2;
+	    }
+	    else if(count == 2){                   //2 vertexes with odd indegrees (Eulerian paht/semi Eulerian)
+	        return 1; 
+	    }else{
+	        return 0;
+	    }
+	}
+};
+
+
+//EXTRA CODE(IS CONNECTED COMPONENTS)
+class Solution {
+public:
+    void dfs(vector<int>adj[], vector<bool>&vis, int node){
+        vis[node] = 1;
+        for(auto it : adj[node]){
+            if(!vis[it]){
+                dfs(adj, vis, it);
+            }
+        }
+    }
+    bool isConnected(int V, vector<int>adj[]){
+        int nonZeroDegreeVertex = -1;
+        for(int i = 0 ; i < V ; i++){
+            if(adj[i].size() != 0){
+                nonZeroDegreeVertex = i;
+                break;
+            }
+        }
+        vector<bool>vis(V, false);
+        dfs(adj, vis, nonZeroDegreeVertex);
+        
+        //check if all nonZero degree vertex or node vis
+        for(int i= 0 ; i < V ; i++){
+            if(!vis[i] && adj[i].size() > 0){
+                return false;
+            }
+        }
+        return true;
+    }
+	int isEulerCircuit(int V, vector<int>adj[]){
+	    if(!isConnected(V, adj)){
+	        return 0;
+	    }
+	    
+	    int oddDegreeCount = 0;
+	    for(int i = 0 ; i < V ; i++){
+	        if(adj[i].size() % 2 != 0){
+	            oddDegreeCount++;
+	        }
+	    }
+	    
+	    if(oddDegreeCount > 2){
+	        return 0;               //neither euler path or circuit
+	    }else if(oddDegreeCount == 2){
+	        return 1;              //euler path but not euler circuit
+	    }else if(oddDegreeCount == 0){     //euler circuit only have even degree
+	        return 2;              //euler circuit(euler path as well)
+	    }
+	}
+};
+/*
+Example 1:
+Input: 
+Output: 2
+Explanation: 
+Following is an eulerian circuit in the mentioned graph
+1 -> 2 -> 0 -> 1
+
+Example 2:
+Input: 
+Output: 1
+Explanation: 
+Following is an eulerian path in the mentioned graph
+1 -> 0 -> 2
 */
