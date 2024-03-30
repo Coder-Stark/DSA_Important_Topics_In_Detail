@@ -19,7 +19,7 @@ DISJOINT SET = Intersection of all sets(components is null)                 {T.C
 1. COMBINE TWO GIVEN SETS.          {union find}
 2. TELLS IF TWO MEMBERS BELONG TO SAME SETS OR NOT
 
-DIJKSTRA ALGORITM                                                           {T.C = O(V^2), S.C = O(V^2)}
+DIJKSTRA ALGORITM                                                           {T.C = O(V^2) or O(V+ELOGV), S.C = O(V^2)}
 //NOT APPLICABLE FOR NEGATIVE WEIGHT CYCLE (similar to BFS)
 1. Create minHeap.
 2. find shortest distance of each node from current node.
@@ -52,6 +52,18 @@ ALGORITHM
 4. if the parent of u and v not same then take Union and sum+= w
 5. finally return sum(minsum spanning tree)
 
+//TOPOLOGICAL SORT                                                  {T.C = O(V+E), S.C = O(V)}
+In DFS (using Stack)
+1. Use Simple dfs and take stack for (topsort order), 
+2. call dfs and push parent node atlast, 
+3. finally pop elment from stack and push into ans and return it.
+
+In BFS (indegree {kahn's algo})
+1. Take indegree vector which stores indegree of each node , 
+2. put indegree = 0 value in queue then , do simple bfs and reduce indegree , 
+3. if indegree == 0 push node in queue.
+
+
 //STRONGLY CONNECTED COMPONENTS (SCC)
 ALGORITHM
 1. sort the adjacency list using topological sort
@@ -63,6 +75,7 @@ ALGORITHM
 2. Not all graphs have eulerian path.
 3. All node have even degree except (2 nodes {starting & ending})
 4. If any node degree > 2 then it is not having Eulerian Path.
+
 //EULERIAN CIRCUIT
 1. An eulerian path which starts and ends on the same node.
 2. If the path is eulerian circuit then we can start any node(it will always ends on same node).
@@ -1085,7 +1098,7 @@ Explanation: There are not enough cables.
 
 
 //12b. NUMBER OF OPERATIONS TO MAKE NETWORK CONNECTED
-//USING DSU {numer of components}                                            {T.C = O(V+E), S.C = O(V)}
+//USING DSU {number of components}                                            {T.C = O(V+E), S.C = O(V)}
 /*
 iterate on edges, if edges dont have same parent then take union of that and components--(components{n initially}), finally
 return components-1 (required edges to move = components-1).
@@ -1211,7 +1224,7 @@ Therefore, we return 14.
 */
 
 
-//13a. USING DSU                                               {T.C = O(V+E), S.C = O(V)}
+//13b. USING DSU                                               {T.C = O(V+E), S.C = O(V)}
 /*
 First make components by traversing edges and union of edges then take a map {component/parent, size of component}
 then iterate on map and apply formula ans = size*(remaining-size)
