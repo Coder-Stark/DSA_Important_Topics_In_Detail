@@ -2749,3 +2749,599 @@ Input: tickets = [["JFK","SFO"],["JFK","ATL"],["SFO","ATL"],["ATL","JFK"],["ATL"
 Output: ["JFK","ATL","JFK","SFO","ATL","SFO"]
 Explanation: Another possible reconstruction is ["JFK","SFO","ATL","JFK","ATL","SFO"] but it is larger in lexical order.
 */
+
+
+//35. VALIDATE BINARY TREE NODES                                    {T.C = O(N), S.C = O(N)}
+//DSU (MODIFIED)
+class Solution {
+public:
+    vector<int>parent;
+    int components;
+
+    int find(int x){
+        if(parent[x] == x){
+            return x;
+        }
+        return parent[x] = find(parent[x]);
+    }
+    bool Union(int p, int c){
+        if(find(c) != c){
+            return false;
+        }
+        if(find(p) == c){
+            return false;
+        }
+        
+        parent[c] = p;
+        components--;
+
+        return true;
+    }
+    bool validateBinaryTreeNodes(int n, vector<int>& leftChild, vector<int>& rightChild) {
+        components = n;                              //initially all node individual
+        parent.resize(n);
+        for(int i = 0 ; i < n ; i++){
+            parent[i] = i;
+        }
+
+        for(int i = 0 ; i < n ; i++){
+            int node = i;
+            int lc = leftChild[i];
+            int rc = rightChild[i];
+
+            if(lc != -1 && Union(node, lc) == false){
+                return false;
+            }
+            if(rc != -1 && Union(node, rc) == false){
+                return false;
+            }
+        }
+
+        return components == 1;                     //if single component (valid BT)
+    }
+};
+/*
+Example 1:
+Input: n = 4, leftChild = [1,-1,3,-1], rightChild = [2,-1,-1,-1]
+Output: true
+
+Example 2:
+Input: n = 4, leftChild = [1,-1,3,-1], rightChild = [2,3,-1,-1]
+Output: false
+
+Example 3:
+Input: n = 2, leftChild = [1,0], rightChild = [-1,-1]
+Output: false
+*/
+
+
+//36. PARALLEL COURSES III                                              {T.C = O(V+E), S.C = O(V)}
+//TOPOLOGICAL SORT
+class Solution {
+public:
+    int minimumTime(int n, vector<vector<int>>& relations, vector<int>& time) {
+        unordered_map<int,vector<int>>adj;
+        for(auto it : relations){
+            int u = it[0]-1;                  //for indexing 1 to 0
+            int v = it[1]-1;
+
+            adj[u].push_back(v);
+        }
+
+        vector<int>inDegree(n, 0);
+        for(int i = 0 ; i < n ; i++){            //calculate indegree of all
+            for(auto it : adj[i]){
+                inDegree[it]++;
+            }
+        }
+        queue<int>q;
+        vector<int>maxTime(n, 0);                      //just add this on basic Topological sort all same
+        for(int i = 0 ; i < n ; i++){            //first push indegree 0 nodes in queue
+            if(inDegree[i] == 0){
+                q.push(i);
+                maxTime[i] = time[i];               //add
+            }
+        }
+
+        while(!q.empty()){
+            auto frontNode = q.front();
+            q.pop();
+            for(auto it : adj[frontNode]){
+                maxTime[it] = max(maxTime[it], maxTime[frontNode]+time[it]); //add
+                inDegree[it]--;
+                if(inDegree[it] == 0){
+                    q.push(it);
+                }
+            }
+        }
+
+        return *max_element(maxTime.begin(), maxTime.end());        //add
+    }
+};
+/*
+Example 1:
+Input: n = 3, relations = [[1,3],[2,3]], time = [3,2,5]
+Output: 8
+Explanation: The figure above represents the given graph and the time required to complete each course. 
+We start course 1 and course 2 simultaneously at month 0.
+Course 1 takes 3 months and course 2 takes 2 months to complete respectively.
+Thus, the earliest time we can start course 3 is at month 3, and the total time required is 3 + 5 = 8 months.
+
+Example 2:
+Input: n = 5, relations = [[1,5],[2,5],[3,5],[3,4],[4,5]], time = [1,2,3,4,5]
+Output: 12
+Explanation: The figure above represents the given graph and the time required to complete each course.
+You can start courses 1, 2, and 3 at month 0.
+You can complete them after 1, 2, and 3 months respectively.
+Course 4 can be taken only after course 3 is completed, i.e., after 3 months. It is completed after 3 + 4 = 7 months.
+Course 5 can be taken only after courses 1, 2, 3, and 4 have been completed, i.e., after max(1,2,3,7) = 7 months.
+Thus, the minimum time needed to complete all the courses is 7 + 5 = 12 months.
+*/
+
+
+//37. DESIGN GRAPH WITH SORTEST PATH CALCULATOR                         {T.C = O((V+E)*LOGV), S.C = O(V)}
+//DIJAKSTRA (SIMPLE)
+class Graph {
+public:     
+    typedef pair<int, int> P;
+    unordered_map<int, vector<pair<int,int>>>adj;
+    // priority_queue<int, vector<int>, greater<int>>minHeap;
+    priority_queue<P, vector<P>, greater<P>>pq;
+    int N;
+    Graph(int n, vector<vector<int>>& edges) {
+        N = n;
+
+        for(auto it : edges){
+            int u = it[0];
+            int v = it[1];
+            int w = it[2];
+
+            adj[u].push_back({v, w});
+        }
+    }
+    
+    void addEdge(vector<int> edge) {
+        int u = edge[0];
+        int v = edge[1];
+        int w = edge[2];
+
+        adj[u].push_back({v, w});
+    }
+    
+    int shortestPath(int node1, int node2) {
+        vector<int>minDisWt(N, INT_MAX);
+        minDisWt[node1] = 0;                   //initial node dis from itself is 0
+        pq.push({node1, 0});                   //{source, weight}
+        while(!pq.empty()){
+            auto topNode = pq.top();
+            pq.pop();
+            int node = topNode.first;
+            int dW = topNode.second;
+            for(auto it : adj[node]){
+                int u = it.first;
+                int w = it.second;
+
+                if(dW + w < minDisWt[u]){
+                    minDisWt[u] = dW + w;
+                    pq.push({u, minDisWt[u]});
+                }
+            }
+        }
+        return minDisWt[node2] == INT_MAX ? -1 : minDisWt[node2] ;                            //min distance from source(node1) to dest(node2)
+    }
+};
+/*
+Example 1:
+Input
+["Graph", "shortestPath", "shortestPath", "addEdge", "shortestPath"]
+[[4, [[0, 2, 5], [0, 1, 2], [1, 2, 1], [3, 0, 3]]], [3, 2], [0, 3], [[1, 3, 4]], [0, 3]]
+Output
+[null, 6, -1, null, 6]
+Explanation
+Graph g = new Graph(4, [[0, 2, 5], [0, 1, 2], [1, 2, 1], [3, 0, 3]]);
+g.shortestPath(3, 2); // return 6. The shortest path from 3 to 2 in the first diagram above is 3 -> 0 -> 1 -> 2 with a total cost of 3 + 2 + 1 = 6.
+g.shortestPath(0, 3); // return -1. There is no path from 0 to 3.
+g.addEdge([1, 3, 4]); // We add an edge from node 1 to node 3, and we get the second diagram above.
+g.shortestPath(0, 3); // return 6. The shortest path from 0 to 3 now is 0 -> 1 -> 3 with a total cost of 2 + 4 = 6.
+*/
+
+
+//38. NUMBER OF POSSIBLE SETS OF CLOSING BRANCH                            {T.C = O(2^n * n^3), S.C = O(N^2)}
+//FLOYD WARSHELL (SHORTEST DIS FOR EACH NODE )
+class Solution {
+public:
+    int numberOfSets(int n, int maxDistance, vector<vector<int>>& roads) {
+        int ans = 0;
+        //O(2^n * (n^3))
+        for(int set = 0; set < (1 << n); set++) { //trying all possible subsets   //1<<n == pow(2, n)
+            vector<vector<int>> grid(n, vector<int>(n, 1e9)); //updated graph
+            //Update the Graph based on the selected nodes - present in set
+            for(auto &it : roads) {
+                int u  = it[0];
+                int v  = it[1];
+                int wt = it[2];
+
+                //[[1,0,11],[1,0,16],[0,2,13]]
+                if((set >> u & 1) && (set >> v & 1)) {
+                    grid[u][v] = min(grid[u][v], wt);
+                    grid[v][u] = min(grid[v][u], wt);
+                }
+            }
+
+            for(int i = 0; i<n; i++) {
+                grid[i][i] = 0;
+            }
+
+            //Floyd Warshall to find shortest distance from any node to any other node
+            for(int k = 0; k < n; k++) {
+                for(int i = 0; i<n; i++) {
+                    for(int j = 0; j<n; j++) {
+
+                       grid[i][j] = min(grid[i][j], grid[i][k] + grid[k][j]);
+
+                    }
+                }
+            }
+
+            //Check if all shortest paths <= maxDistance
+            bool ok = true;
+            for(int i = 0; i<n; i++) {
+                for(int j = 0; j<n; j++) {
+                    if(i == j){
+                        continue;
+                    } 
+                    if((set >> i & 1) && (set >> j & 1)) {
+                        if(grid[i][j] > maxDistance) {
+                            ok = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(ok == true) {
+                ans++;
+            }
+        }
+        return ans;
+    }
+};
+
+//USING DIJAKSTRA
+class Solution {
+public:
+    bool checkSubset(int mask, const vector<vector<pair<int, int>>>& graph, int n, int maxDistance) {
+        for (int i = 0; i < n; ++i) {
+            if (mask & (1 << i)) continue; // Skip closed branches in this subset
+            for (int j = i + 1; j < n; ++j) {
+                if (mask & (1 << j)) continue; // Skip closed branches in this subset
+                // Check if branches i and j are reachable within maxDistance
+                if (!isReachable(i, j, graph, maxDistance, mask)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // Function to check if two branches are reachable within maxDistance
+    bool isReachable(int src, int dest, const vector<vector<pair<int, int>>>& graph, int maxDistance, int mask) {
+        vector<int> minDistance(graph.size(), INT_MAX);
+        minDistance[src] = 0;
+
+        // Use a priority queue for Dijkstra's algorithm
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;
+        pq.push({0, src});
+
+        while (!pq.empty()) {
+            int distance = pq.top().first;
+            int u = pq.top().second;
+            pq.pop();
+
+            if (distance > minDistance[u]) continue;
+            if (u == dest) return distance <= maxDistance;
+
+            for (const auto& edge : graph[u]) {
+                if (mask & (1 << edge.first)) continue; // Skip closed branches
+                int v = edge.first;
+                int w = edge.second;
+                if (minDistance[u] + w < minDistance[v]) {
+                    minDistance[v] = minDistance[u] + w;
+                    pq.push({minDistance[v], v});
+                }
+            }
+        }
+
+        return false;
+    }
+    int numberOfSets(int n, int maxDistance, vector<vector<int>>& roads) {
+        // Step 1: Graph creation
+        // Create a graph represented as an adjacency list
+        vector<vector<pair<int, int>>> graph(n);
+        for (const auto& road : roads) {
+            // Add edges to the graph. Each edge is a pair (destination, weight)
+            graph[road[0]].emplace_back(road[1], road[2]);
+            graph[road[1]].emplace_back(road[0], road[2]);
+        }
+
+        int count = 0;
+        // Step 2: Iterating over subsets
+        // Iterate over all subsets of branches
+        for (int mask = 0; mask < (1 << n); ++mask) {
+            // Check if the subset satisfies the maxDistance constraint
+            if (checkSubset(mask, graph, n, maxDistance)) {
+                ++count;
+            }
+        }
+        return count;
+    }
+};
+/*
+Example 1:
+Input: n = 3, maxDistance = 5, roads = [[0,1,2],[1,2,10],[0,2,10]]
+Output: 5
+Explanation: The possible sets of closing branches are:
+- The set [2], after closing, active branches are [0,1] and they are reachable to each other within distance 2.
+- The set [0,1], after closing, the active branch is [2].
+- The set [1,2], after closing, the active branch is [0].
+- The set [0,2], after closing, the active branch is [1].
+- The set [0,1,2], after closing, there are no active branches.
+It can be proven, that there are only 5 possible sets of closing branches.
+
+Example 2:
+Input: n = 3, maxDistance = 5, roads = [[0,1,20],[0,1,10],[1,2,2],[0,2,2]]
+Output: 7
+Explanation: The possible sets of closing branches are:
+- The set [], after closing, active branches are [0,1,2] and they are reachable to each other within distance 4.
+- The set [0], after closing, active branches are [1,2] and they are reachable to each other within distance 2.
+- The set [1], after closing, active branches are [0,2] and they are reachable to each other within distance 2.
+- The set [0,1], after closing, the active branch is [2].
+- The set [1,2], after closing, the active branch is [0].
+- The set [0,2], after closing, the active branch is [1].
+- The set [0,1,2], after closing, there are no active branches.
+It can be proven, that there are only 7 possible sets of closing branches.
+
+Example 3:
+Input: n = 1, maxDistance = 10, roads = []
+Output: 2
+Explanation: The possible sets of closing branches are:
+- The set [], after closing, the active branch is [0].
+- The set [0], after closing, there are no active branches.
+It can be proven, that there are only 2 possible sets of closing branches.
+*/
+
+
+//39. MINIMUM COST TO CONVERT STRING I                             {T.C = O(N), S.C = O(1)} {CONSTANT 26(a-z)}
+//FLOYD WARSHALL
+class Solution {
+public:
+    void floydWarshall(vector<vector<long  long>>&adjMatrix, vector<char>&original, vector<char>&changed, vector<int>&cost){
+        for(int i = 0 ; i < original.size() ; i++){                               //fill matrix
+            int s = original[i]-'a';
+            int t = changed[i]-'a';
+
+            adjMatrix[s][t] = min(adjMatrix[s][t], (long long)cost[i]);
+        }
+
+        //simple floyd 
+        for(int k = 0 ; k < 26 ; k++){
+            for(int i = 0 ; i < 26; i++){
+                for(int j = 0 ; j < 26 ; j++){
+                    adjMatrix[i][j] = min(adjMatrix[i][j], adjMatrix[i][k] + adjMatrix[k][j]);
+                }
+            }
+        }
+    }
+    long long minimumCost(string source, string target, vector<char>& original, vector<char>& changed, vector<int>& cost) {
+        vector<vector<long  long>>adjMatrix(26, vector<long long>(26, INT_MAX));
+        floydWarshall(adjMatrix, original, changed, cost);      //update matrix
+
+        long long ans = 0;
+        for(int i = 0 ; i < source.length() ; i++){
+            if(source[i] == target[i]){
+                continue;
+            }
+            if(adjMatrix[source[i]-'a'][target[i]-'a'] == INT_MAX){
+                return -1;
+            }
+            ans += adjMatrix[source[i]-'a'][target[i]-'a'];
+        }
+        return ans;
+    }
+};
+/*
+Example 1:
+Input: source = "abcd", target = "acbe", original = ["a","b","c","c","e","d"], changed = ["b","c","b","e","b","e"], cost = [2,5,5,1,2,20]
+Output: 28
+Explanation: To convert the string "abcd" to string "acbe":
+- Change value at index 1 from 'b' to 'c' at a cost of 5.
+- Change value at index 2 from 'c' to 'e' at a cost of 1.
+- Change value at index 2 from 'e' to 'b' at a cost of 2.
+- Change value at index 3 from 'd' to 'e' at a cost of 20.
+The total cost incurred is 5 + 1 + 2 + 20 = 28.
+It can be shown that this is the minimum possible cost.
+
+Example 2:
+Input: source = "aaaa", target = "bbbb", original = ["a","c"], changed = ["c","b"], cost = [1,2]
+Output: 12
+Explanation: To change the character 'a' to 'b' change the character 'a' to 'c' at a cost of 1, followed by changing the character 'c' to 'b' at a cost of 2, for a total cost of 1 + 2 = 3. To change all occurrences of 'a' to 'b', a total cost of 3 * 4 = 12 is incurred.
+
+Example 3:
+Input: source = "abcd", target = "abce", original = ["a"], changed = ["e"], cost = [10000]
+Output: -1
+Explanation: It is impossible to convert source to target because the value at index 3 cannot be changed from 'd' to 'e'.
+*/
+
+/*
+Example 1:
+Input: source = "abcd", target = "acbe", original = ["a","b","c","c","e","d"], changed = ["b","c","b","e","b","e"], cost = [2,5,5,1,2,20]
+Output: 28
+Explanation: To convert the string "abcd" to string "acbe":
+- Change value at index 1 from 'b' to 'c' at a cost of 5.
+- Change value at index 2 from 'c' to 'e' at a cost of 1.
+- Change value at index 2 from 'e' to 'b' at a cost of 2.
+- Change value at index 3 from 'd' to 'e' at a cost of 20.
+The total cost incurred is 5 + 1 + 2 + 20 = 28.
+It can be shown that this is the minimum possible cost.
+
+Example 2:
+Input: source = "aaaa", target = "bbbb", original = ["a","c"], changed = ["c","b"], cost = [1,2]
+Output: 12
+Explanation: To change the character 'a' to 'b' change the character 'a' to 'c' at a cost of 1, followed by changing the character 'c' to 'b' at a cost of 2, for a total cost of 1 + 2 = 3. To change all occurrences of 'a' to 'b', a total cost of 3 * 4 = 12 is incurred.
+
+Example 3:
+Input: source = "abcd", target = "abce", original = ["a"], changed = ["e"], cost = [10000]
+Output: -1
+Explanation: It is impossible to convert source to target because the value at index 3 cannot be changed from 'd' to 'e'.
+*/
+
+
+//40. COUNT THE NUMBER OF HOUSES AT A CERTAIN DISTANCE I              {T.C = O(N^3), S.C = O(N^2)}
+//FLOYD WARSHELL
+class Solution {
+public:
+    vector<int> countOfPairs(int n, int x, int y) {
+        vector<int>ans(n);
+
+        vector<vector<int>>miniDisMat(n+1, vector<int>(n+1, 1e9));
+        //initialize the grid
+        for(int i = 1 ; i < n ; i++){
+            int j = i+1;
+            miniDisMat[i][i] = 0;                                  //own node distance is 0
+            miniDisMat[j][j] = 0;
+            miniDisMat[i][j] = 1;                                  //one node to another node distance is 1
+            miniDisMat[j][i] = 1; 
+        }
+        if(x != y){                                                //x == y case handled above(miniDisMat[i][i] = 0)
+            miniDisMat[x][y] = 1;
+            miniDisMat[y][x] = 1;
+        }
+        
+        //floyd warshell algo
+        for(int k = 1; k <= n ; k++){
+            for(int i = 1; i <= n ; i++){
+                for(int j = 1 ; j <= n ; j++){
+                    miniDisMat[i][j] = min(miniDisMat[i][j], miniDisMat[i][k] + miniDisMat[k][j]);
+                }
+            }
+        }
+
+        //count pairs at each node
+        for(int i = 1 ; i <= n; i++){
+            for(int j = 1; j <= n ; j++){
+                if(i != j){
+                    int val = miniDisMat[i][j];
+                    ans[val-1]++;                          //ans index starts from 0 not 1
+                }
+            }
+        }
+        return ans;
+    }
+};
+/*
+Example 1:
+Input: n = 3, x = 1, y = 3
+Output: [6,0,0]
+Explanation: Let's look at each pair of houses:
+- For the pair (1, 2), we can go from house 1 to house 2 directly.
+- For the pair (2, 1), we can go from house 2 to house 1 directly.
+- For the pair (1, 3), we can go from house 1 to house 3 directly.
+- For the pair (3, 1), we can go from house 3 to house 1 directly.
+- For the pair (2, 3), we can go from house 2 to house 3 directly.
+- For the pair (3, 2), we can go from house 3 to house 2 directly.
+
+Example 2:
+Input: n = 5, x = 2, y = 4
+Output: [10,8,2,0,0]
+Explanation: For each distance k the pairs are:
+- For k == 1, the pairs are (1, 2), (2, 1), (2, 3), (3, 2), (2, 4), (4, 2), (3, 4), (4, 3), (4, 5), and (5, 4).
+- For k == 2, the pairs are (1, 3), (3, 1), (1, 4), (4, 1), (2, 5), (5, 2), (3, 5), and (5, 3).
+- For k == 3, the pairs are (1, 5), and (5, 1).
+- For k == 4 and k == 5, there are no pairs.
+
+Example 3:
+Input: n = 4, x = 1, y = 1
+Output: [6,4,2,0]
+Explanation: For each distance k the pairs are:
+- For k == 1, the pairs are (1, 2), (2, 1), (2, 3), (3, 2), (3, 4), and (4, 3).
+- For k == 2, the pairs are (1, 3), (3, 1), (2, 4), and (4, 2).
+- For k == 3, the pairs are (1, 4), and (4, 1).
+- For k == 4, there are no pairs.
+*/
+
+
+//41. FIND ALL PEOPLE WITH SECRET                                   {T.C = O(V+E*LOGV), S.C = O(V+E)}
+//DIJKSTRA
+class Solution {
+public:
+    typedef pair<int,int>P;
+    vector<int> findAllPeople(int n, vector<vector<int>>& meetings, int firstPerson) {
+        unordered_map<int, vector<pair<int, int>>>adj;
+        for(auto it : meetings){
+            int u = it[0];
+            int v = it[1];
+            int w = it[2];
+
+            adj[u].push_back({v, w});
+            adj[v].push_back({u, w});
+        }
+        // vector<int>minDisWt(n, INT_MAX);
+        vector<bool>vis(n, false);
+        priority_queue<P, vector<P>, greater<P>>pq;      //{time, person},   //minimum time reach on top of pq
+        pq.push({0, 0});                         //2 person
+        pq.push({0, firstPerson});
+
+        while(!pq.empty()){
+            auto topNode = pq.top();
+            pq.pop();
+            int dW = topNode.first;             //dw = > time
+            int node = topNode.second;            //node => person
+
+            if(!vis[node]){
+                vis[node] = true;
+                for(auto it : adj[node]){         //{node(person), wt(time)}
+                    if(!vis[it.first] && it.second >= dW){
+                        pq.push({it.second, it.first});
+                    }
+                }
+            }
+        }
+        vector<int>ans;
+        for(int i = 0 ; i < n ; i++){
+            if(vis[i]== true){
+                ans.push_back(i);
+            }
+        }
+
+        return ans;
+    }
+};
+/*
+Example 1:
+Input: n = 6, meetings = [[1,2,5],[2,3,8],[1,5,10]], firstPerson = 1
+Output: [0,1,2,3,5]
+Explanation:
+At time 0, person 0 shares the secret with person 1.
+At time 5, person 1 shares the secret with person 2.
+At time 8, person 2 shares the secret with person 3.
+At time 10, person 1 shares the secret with person 5.​​​​
+Thus, people 0, 1, 2, 3, and 5 know the secret after all the meetings.
+
+Example 2:
+Input: n = 4, meetings = [[3,1,3],[1,2,2],[0,3,3]], firstPerson = 3
+Output: [0,1,3]
+Explanation:
+At time 0, person 0 shares the secret with person 3.
+At time 2, neither person 1 nor person 2 know the secret.
+At time 3, person 3 shares the secret with person 0 and person 1.
+Thus, people 0, 1, and 3 know the secret after all the meetings.
+
+Example 3:
+Input: n = 5, meetings = [[3,4,2],[1,2,1],[2,3,1]], firstPerson = 1
+Output: [0,1,2,3,4]
+Explanation:
+At time 0, person 0 shares the secret with person 1.
+At time 1, person 1 shares the secret with person 2, and person 2 shares the secret with person 3.
+Note that person 2 can share the secret at the same time as receiving it.
+At time 2, person 3 shares the secret with person 4.
+Thus, people 0, 1, 2, 3, and 4 know the secret after all the meetings.
+*/

@@ -1317,7 +1317,7 @@ class Solution
         priority_queue<pair<int,int>, vector<pair<int, int>>, greater<pair<int,int>>>pq;  
         //{node, dist or weight}
         vector<int>minDisWt(V, INT_MAX);            //miniDistance/weight initialize with infinity
-        minDisWt[S] = 0;                            //minDisWttance of initial node is 0 always
+        minDisWt[S] = 0;                            //minDistance of initial node is 0 always from itself
         pq.push({S, 0});
         
         while(!pq.empty()){
