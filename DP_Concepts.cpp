@@ -204,7 +204,7 @@ public:
         //case 1: take 0th index to n-2 index
         int inclZeroIdx = solveMem(nums, 0, n-1, dp1);
 
-        //case 2: take 1th index to n-1 index
+        //case 2: take 1st index to n-1 index
         int exclZeroIdx = solveMem(nums, 1, n, dp2);
         
         return max(inclZeroIdx, exclZeroIdx);

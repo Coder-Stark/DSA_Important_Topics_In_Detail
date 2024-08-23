@@ -7,7 +7,7 @@ using namespace std;
 /*
 //MINIMUM DISTANCE FINDING ALGORITHM
 1. DIJKSTRA'S ALGO                  {not work for -ve Undirected weighted graph}
-2. BELLMANFORD ALGO                 {work for -ve weighted graph}
+2. BELLMAN FORD ALGO                 {work for -ve weighted graph}
 3. FLOYD WARSHALL ALGO              {brute force algo}
 
 //MINIMUM SPANNING TREE ALGORITHM
@@ -24,7 +24,7 @@ DIJKSTRA ALGORITM                                                           {T.C
 1. Create minHeap.
 2. find shortest distance of each node from current node.
 
-BELLMON FORD
+BELLMAN FORD
 APPLICABLE FOR NEGATIVE WEIGHT CYCLE
 WORK ONLY FOR DIRECTED GRAPH SO FOR UNDIRECTED GRAPH FIRST WE HAVE TO CONVERT IT INTO DIRECTED(make edges both side)
 

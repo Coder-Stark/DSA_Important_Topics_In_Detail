@@ -10,7 +10,7 @@ RIGHT SHIF (a)(1001 => 100) = a >>= 1
 LEFT SHIF (a)(1001 => 1010) = a << 1
 FIND Ith BIT = (num >> i) & 1.
 //same as above
-FIND Ith BIT IS 0 OR 1 = ((1 << i) & num)        //(num & (1 << i)) == 0 {ith bit is 0} , == 1{ith bit is 1}
+FIND Ith BIT IS 0 OR 1 = (num & (1 << i)) >> i        //(num & (1 << i)) == 0 {ith bit is 0} , == 1{ith bit is 1}  //(1 << i) => bitMasking
 UNSET(make 1 to 0) A SET BIT = n & (n-1)
 NO. OF BITS REQUIRED FOR REPRESENT PARTICULAR NUMBER(X) = LOG2(X) + 1
 */
