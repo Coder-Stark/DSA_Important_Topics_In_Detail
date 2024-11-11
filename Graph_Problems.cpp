@@ -3345,3 +3345,476 @@ Note that person 2 can share the secret at the same time as receiving it.
 At time 2, person 3 shares the secret with person 4.
 Thus, people 0, 1, 2, 3, and 4 know the secret after all the meetings.
 */
+
+
+//42. REMOVE METHODS FROM PROJECT                                      {T.C = O(V+E), S.C = O(V+E)}
+//DFS
+class Solution {
+public:
+    void dfs(unordered_map<int, vector<int>>&adj, vector<bool>&vis, int node){
+        vis[node] = true;
+        for(auto it : adj[node]){
+            if(!vis[it]) dfs(adj, vis, it);
+        }
+    }
+    vector<int> remainingMethods(int n, int k, vector<vector<int>>& invocations) {
+        unordered_map<int,vector<int>>adj;
+        for(auto it : invocations){
+            adj[it[0]].push_back(it[1]);
+        }
+
+        vector<bool>vis(n, false);
+        dfs(adj, vis, k);                          //k = src node
+
+        bool suspicious = true;
+        for(int i = 0 ;  i < n; i++){
+            if(!vis[i]){
+                for(auto it : adj[i]){             //outside node invoke within grp, mark false (we cant remove)
+                    if(vis[it]) suspicious = false;
+                }
+            }
+        }
+
+        vector<int>ans;
+        if(suspicious){
+            for(int i = 0 ; i < n; i++){
+                if(!vis[i]) ans.push_back(i);
+            }
+        }else{   //no suspious push all
+            for(int i = 0 ; i < n ;i++){
+                ans.push_back(i);
+            }
+        }
+        return ans;
+    }
+};
+/*
+Example 1:
+Input: n = 4, k = 1, invocations = [[1,2],[0,1],[3,2]]
+Output: [0,1,2,3]
+Explanation:
+Method 2 and method 1 are suspicious, but they are directly invoked by methods 3 and 0, which are not suspicious. We return all elements without removing anything.
+
+Example 2:
+Input: n = 5, k = 0, invocations = [[1,2],[0,2],[0,1],[3,4]]
+Output: [3,4]
+Explanation:
+Methods 0, 1, and 2 are suspicious and they are not directly invoked by any other method. We can remove them.
+
+Example 3:
+Input: n = 3, k = 2, invocations = [[1,2],[0,1],[2,0]]
+Output: []
+Explanation:
+All methods are suspicious. We can remove them.
+*/
+
+
+//43. FIND MINIMUM TIME TO REACH LAST ROOM I                      {T.C = O(NM*LOGNM), S.C = O(NM)}
+//DIJKSTRA
+class Solution {
+public:
+    typedef pair<int, pair<int, int>> P;                  // time, {row, col}
+    vector<vector<int>> directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    
+    bool isValid(int i, int j, int n, int m) {
+        return (i >= 0 && i < n && j >= 0 && j < m);
+    }
+    
+    int minTimeToReach(vector<vector<int>>& moveTime) {
+        int n = moveTime.size(), m = moveTime[0].size();
+        priority_queue<P, vector<P>, greater<P>> pq;
+        pq.push({0, {0, 0}});                          // initial time = 0, start from (0, 0)
+
+        vector<vector<int>> minDis(n, vector<int>(m, INT_MAX));
+        minDis[0][0] = 0;                              // time to reach start is 0
+
+        while (!pq.empty()) {
+            auto topNode = pq.top();
+            pq.pop();
+            int t = topNode.first;
+            int r = topNode.second.first;
+            int c = topNode.second.second;
+
+            if (r == n - 1 && c == m - 1){              // reached destination
+                return t;
+            }
+
+            for (auto it : directions) {
+                int newR = r + it[0];
+                int newC = c + it[1];
+
+                if (isValid(newR, newC, n, m)) {
+                    int newTime = 1 + max(t, moveTime[newR][newC]);      //1(path) + max(curr, next)
+                    
+                    if (newTime < minDis[newR][newC]) {
+                        minDis[newR][newC] = newTime;
+                        pq.push({newTime, {newR, newC}});
+                    }
+                }
+            }
+        }
+        
+        return -1; // If destination is unreachable
+    }
+};
+/*
+Example 1:
+Input: moveTime = [[0,4],[4,4]]
+Output: 6
+Explanation:
+The minimum time required is 6 seconds.
+At time t == 4, move from room (0, 0) to room (1, 0) in one second.
+At time t == 5, move from room (1, 0) to room (1, 1) in one second.
+
+Example 2:
+Input: moveTime = [[0,0,0],[0,0,0]]
+Output: 3
+Explanation:
+The minimum time required is 3 seconds.
+At time t == 0, move from room (0, 0) to room (1, 0) in one second.
+At time t == 1, move from room (1, 0) to room (1, 1) in one second.
+At time t == 2, move from room (1, 1) to room (1, 2) in one second.
+
+Example 3:
+Input: moveTime = [[0,1],[1,2]]
+Output: 3
+*/
+
+
+//44. FIND MINIMUM TIME TO REACH LAST ROOM II                      {T.C = O(NM*LOGNM), S.C = O(NM)}
+//DIJKSTRA
+class Solution {
+const vector<pair<int, int>> directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+public:
+    int minTimeToReach(vector<vector<int>>& moveTime) {
+        //Djikstra
+        int n = moveTime.size();
+        int m = moveTime[0].size();
+        //distance from 0,0 to i,j
+        vector<vector<int>> dist(n, vector<int>(m, INT_MAX));
+        dist[0][0] = 0;
+        
+        //Priority Queue to maintain closest room we have not visited yet
+        priority_queue<tuple<int, int, int>, vector<tuple<int, int, int>>, greater<>> pq;
+        pq.push({0, 0, 0});
+        while (!pq.empty()) {
+            auto [currentDist, row, col] = pq.top();
+            pq.pop();
+            
+            if (row == n - 1 && col == m - 1) {
+                return currentDist;  
+            }
+            
+            for (const auto& [dx, dy] : directions) {
+                int newRow = row + dx;
+                int newCol = col + dy;
+                
+                if (newRow >= 0 && newRow < n && newCol >= 0 && newCol < m) {
+                    int travelTime = 2-(newRow+newCol)%2; // =(newRow+newCol)%2? 1:2;
+                    
+                    int newDist = max(currentDist, moveTime[newRow][newCol])+travelTime;
+                    
+                    if (newDist < dist[newRow][newCol]) {
+                        dist[newRow][newCol] = newDist;
+                        pq.push({newDist, newRow, newCol});
+                    }
+                }
+            }
+        }    
+        return dist[n-1][m-1];
+    }
+};
+/*
+Example 1:
+Input: moveTime = [[0,4],[4,4]]
+Output: 7
+Explanation:
+The minimum time required is 7 seconds.
+At time t == 4, move from room (0, 0) to room (1, 0) in one second.
+At time t == 5, move from room (1, 0) to room (1, 1) in two seconds.
+
+Example 2:
+Input: moveTime = [[0,0,0,0],[0,0,0,0]]
+Output: 6
+Explanation:
+The minimum time required is 6 seconds.
+At time t == 0, move from room (0, 0) to room (1, 0) in one second.
+At time t == 1, move from room (1, 0) to room (1, 1) in two seconds.
+At time t == 3, move from room (1, 1) to room (1, 2) in one second.
+At time t == 4, move from room (1, 2) to room (1, 3) in two seconds.
+
+Example 3:
+Input: moveTime = [[0,1],[1,2]]
+Output: 4
+*/
+
+
+//45. MINIMUM COST OF A PATH WITH SPECIAL ROADS                    {T.C = O(N^2*LOGN), S.C = O(N^2)}
+//DIJKSTRA
+class Solution {
+public:
+    typedef pair<int,pair<int,int>>P;
+    int minimumCost(vector<int>& start, vector<int>& target, vector<vector<int>>& specialRoads) {
+        int n = specialRoads.size(), m = specialRoads[0].size();
+        priority_queue<P, vector<P>, greater<P>>pq;
+        pq.push({0, {start[0], start[1]}});             //cost, r, c
+
+        map<pair<int, int>, int>minDis;                //store min cost to reach each pos
+        minDis[{start[0], start[1]}] = 0;                             //initial cost
+
+        while(!pq.empty()){
+            auto topNode = pq.top();
+            pq.pop();
+
+            int cost = topNode.first;
+            int r    = topNode.second.first;
+            int c    = topNode.second.second;
+
+            if(r == target[0] && c == target[1]) return cost;   //target reached
+
+            //regular move without special road
+            int directCost = cost + abs(target[0]-r) + abs(target[1]-c);
+            if(!minDis.count({target[0], target[1]}) || directCost < minDis[{target[0], target[1]}]){
+                minDis[{target[0], target[1]}] = directCost;
+                pq.push({directCost, {target[0], target[1]}});
+            }
+
+            //check move via special path
+            for(auto it : specialRoads){
+                int x1 = it[0], y1 = it[1];
+                int x2 = it[2], y2 = it[3];
+                int roadCost = it[4];
+
+                //move from (x, y) to (x1, y1) then take special road to (x2, y2)
+                int specialCost = cost + abs(x1 - r) + abs(y1 - c) + roadCost;
+                if(!minDis.count({x2, y2}) || specialCost < minDis[{x2, y2}]){
+                    minDis[{x2, y2}] = specialCost;
+                    pq.push({specialCost, {x2, y2}});
+                }
+            }
+        }
+        return -1;                                  //no path found
+    }
+};
+/*
+Example 1:
+Input: start = [1,1], target = [4,5], specialRoads = [[1,2,3,3,2],[3,4,4,5,1]]
+Output: 5
+Explanation:
+(1,1) to (1,2) with a cost of |1 - 1| + |2 - 1| = 1.
+(1,2) to (3,3). Use specialRoads[0] with the cost 2.
+(3,3) to (3,4) with a cost of |3 - 3| + |4 - 3| = 1.
+(3,4) to (4,5). Use specialRoads[1] with the cost 1.
+So the total cost is 1 + 2 + 1 + 1 = 5.
+
+Example 2:
+Input: start = [3,2], target = [5,7], specialRoads = [[5,7,3,2,1],[3,2,3,4,4],[3,3,5,5,5],[3,4,5,6,6]]
+Output: 7
+Explanation:
+It is optimal not to use any special edges and go directly from the starting to the ending position with a cost |5 - 3| + |7 - 2| = 7.
+Note that the specialRoads[0] is directed from (5,7) to (3,2).
+*/
+
+
+//46. NUMBER OF WAYS TO ARRIVE AT DESTINATION                  {T.C = O((E+V)LOGV), S.C = O(E+V)}
+//DIJKSTRA (ON GRAPH)
+class Solution {
+public:
+    typedef long long ll;
+    typedef pair<ll, int> P;
+    int mod = 1e9 + 7;
+
+    int countPaths(int n, vector<vector<int>>& roads) {
+        unordered_map<int, vector<P>> adj;
+        
+        for (auto it : roads) {
+            adj[it[0]].push_back({it[1], it[2]});
+            adj[it[1]].push_back({it[0], it[2]}); 
+        }
+        
+        priority_queue<P, vector<P>, greater<P>> pq;
+        pq.push({0, 0});                                   // {distance, node}
+        
+        vector<ll> minDis(n, LLONG_MAX);
+        vector<int> count(n, 0);
+        
+        minDis[0] = 0;
+        count[0] = 1;                       // Initial count is 1 for the starting node
+        
+        while (!pq.empty()) {
+            auto topNode = pq.top();
+            pq.pop();
+            
+            ll dis = topNode.first;
+            int u = topNode.second;
+
+            if(dis > minDis[u]) continue;                   //skip if dis is not minimum
+
+            for (auto it : adj[u]) {
+                int v = it.first; // Neighbor node
+                ll d = it.second; // Distance to neighbor
+                
+                if (minDis[u] + d < minDis[v]) {
+                    minDis[v] = minDis[u] + d;
+                    pq.push({minDis[v], v});
+                    count[v] = count[u];                      //we found new path (count node of this path only)
+                } else if (minDis[v] == minDis[u] + d) {
+                    count[v] = (count[v] + count[u]) % mod;   //same nodes count so count++
+                }
+            }
+        }
+        
+        return count[n - 1];
+    }
+};
+/*
+Example 1:
+Input: n = 7, roads = [[0,6,7],[0,1,2],[1,2,3],[1,3,3],[6,3,3],[3,5,1],[6,5,1],[2,5,1],[0,4,5],[4,6,2]]
+Output: 4
+Explanation: The shortest amount of time it takes to go from intersection 0 to intersection 6 is 7 minutes.
+The four ways to get there in 7 minutes are:
+- 0 ➝ 6
+- 0 ➝ 4 ➝ 6
+- 0 ➝ 1 ➝ 2 ➝ 5 ➝ 6
+- 0 ➝ 1 ➝ 3 ➝ 5 ➝ 6
+
+Example 2:
+Input: n = 2, roads = [[1,0,10]]
+Output: 1
+Explanation: There is only one way to go from intersection 0 to intersection 1, and it takes 10 minutes.
+*/
+
+
+//47. FIND A SAFE WALK THROUGH A GRID                               {T.C = O(N*M), S.C = O(N*M)}
+//BFS ON GRID
+class Solution {
+public:
+    typedef pair<int, pair<int,int>>P;
+    vector<vector<int>>directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    bool isValid(int i, int j, int n, int m){
+        return (i >= 0 && i < n && j >= 0 && j < m);
+    }
+    bool findSafeWalk(vector<vector<int>>& grid, int health) {
+        int n = grid.size(), m = grid[0].size();
+
+        queue<P>q;
+        q.push({health - grid[0][0], {0, 0}});                            //remaining health, row , col
+
+        vector<vector<int>>maxHel(n, vector<int>(m, 0));
+        maxHel[0][0] = health - grid[0][0];
+
+        while(!q.empty()){
+            auto frontNode = q.front();
+            q.pop();
+            int h = frontNode.first;
+            int r = frontNode.second.first;
+            int c = frontNode.second.second;
+
+            if(r == n-1 && c == m-1 && h > 0) return true;
+
+            for(auto it : directions){
+                int newR = r + it[0];
+                int newC = c + it[1];
+
+                if(isValid(newR, newC, n, m)){
+                    int newHealth = h - grid[newR][newC];
+
+                    if(newHealth > 0 && newHealth > maxHel[newR][newC]){
+                        maxHel[newR][newC] = newHealth;
+                        q.push({newHealth, {newR, newC}});
+                    }
+                }
+            }
+        }
+        return false;  
+    }
+};
+/*
+Example 1:
+Input: grid = [[0,1,0,0,0],[0,1,0,1,0],[0,0,0,1,0]], health = 1
+Output: true
+Explanation:
+The final cell can be reached safely by walking along the gray cells below.
+
+Example 2:
+Input: grid = [[0,1,1,0,0,0],[1,0,1,0,0,0],[0,1,1,1,0,1],[0,0,1,0,1,0]], health = 3
+Output: false
+Explanation:
+A minimum of 4 health points is needed to reach the final cell safely.
+
+Example 3:
+Input: grid = [[1,1,1],[1,0,1],[1,1,1]], health = 5
+Output: true
+Explanation:
+The final cell can be reached safely by walking along the gray cells below.
+Any path that does not go through the cell (1, 1) is unsafe since your health will drop to 0 when reaching the final cell.*/
+
+
+//48. NUMBER OF RESTRICTED PATHS FROM FIRST TO LAST NODE          {T.C = O((V+E)LOG(V+E)), S.C = O(V+E)}
+//DIJKSTRA + DP        (ON GRAPH)
+class Solution {
+public:
+    int mod = 1e9 + 7;
+    typedef pair<int, int> P;
+
+    vector<int> dijkstra(const vector<vector<P>>& adj, int src, int n) {
+        priority_queue<P, vector<P>, greater<P>> pq;
+        pq.push({0, src});
+        vector<int> minDis(n + 1, INT_MAX);
+        minDis[src] = 0;
+
+        while (!pq.empty()) {
+            auto [dis, u] = pq.top();
+            pq.pop();
+            if (dis > minDis[u]) continue;  // Skip if this is an outdated distance
+            
+            for (auto [v, d] : adj[u]) {
+                if (minDis[u] + d < minDis[v]) {
+                    minDis[v] = minDis[u] + d;
+                    pq.push({minDis[v], v});
+                }
+            }
+        }
+        return minDis;
+    }
+
+    int dfs(const vector<vector<P>>& adj, const vector<int>& minDisFromN, vector<int>& dp, int node) {
+        if (node == 1) return 1;
+        if (dp[node] != -1) return dp[node];
+
+        int ways = 0;
+        for (auto [v, d] : adj[node]) {
+            if (minDisFromN[node] < minDisFromN[v]) {
+                ways = (ways + dfs(adj, minDisFromN, dp, v)) % mod;
+            }
+        }
+        dp[node] = ways;
+        return dp[node];
+    }
+
+    int countRestrictedPaths(int n, vector<vector<int>>& edges) {
+        vector<vector<P>> adj(n + 1);                   //unordered_map gives MLE
+        for (auto& edge : edges) {
+            adj[edge[0]].emplace_back(edge[1], edge[2]);
+            adj[edge[1]].emplace_back(edge[0], edge[2]);
+        }
+
+        vector<int> minDisFromN = dijkstra(adj, n, n);
+        vector<int> dp(n + 1, -1);
+        return dfs(adj, minDisFromN, dp, n);
+    }
+};
+/*
+Example 1:
+Input: n = 5, edges = [[1,2,3],[1,3,3],[2,3,1],[1,4,2],[5,2,2],[3,5,1],[5,4,10]]
+Output: 3
+Explanation: Each circle contains the node number in black and its distanceToLastNode value in blue. The three restricted paths are:
+1) 1 --> 2 --> 5
+2) 1 --> 2 --> 3 --> 5
+3) 1 --> 3 --> 5
+
+Example 2:
+Input: n = 7, edges = [[1,3,1],[4,1,2],[7,3,4],[2,5,3],[5,6,1],[6,7,2],[7,5,3],[2,6,4]]
+Output: 1
+Explanation: Each circle contains the node number in black and its distanceToLastNode value in blue. The only restricted path is 1 --> 3 --> 7.
+*/
