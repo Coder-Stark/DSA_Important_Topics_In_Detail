@@ -993,3 +993,446 @@ enention -> exention (replace 'n' with 'x')
 exention -> exection (replace 'n' with 'c')
 exection -> execution (insert 'u')
 */
+
+
+//PALINDROMIC PATTERN
+//16. PALINDROMIC SUBSTRINGS (give len)
+//BRUTE FORCE                                                         {T.C = O(N^3), S.C = O(1)}                       
+class Solution {
+public:
+    bool isPalindrome(string s){            //not by reference
+        int n = s.length();
+        int i = 0, j = n-1;
+        while(i < j){
+            if(s[i] != s[j]) return false;
+            i++, j--;
+        }
+        return true;
+    }
+    int countSubstrings(string s) {
+        int n = s.length();
+        int count = 0;
+        for(int i = 0; i < n; i++){
+            for(int j = i; j < n; j++){
+                if(isPalindrome(s.substr(i, j-i+1))) count++;
+            }
+        }
+        return count;
+    }
+};
+
+//mik blueprint for palindromic substrings questions                   {T.C = O(N^2), S.C = O(N^2)}
+class Solution {
+public:
+    int dp[1005][1005];
+    int solveBluPr(string &s){
+        int n = s.length();
+        int count = 0;
+        for(int l = 1; l <= n; l++){           //main loop for traverse each substring lengths
+            for(int i = 0; i+l-1 < n; i++){   //i+l-1 == last substring
+                int j = i+l-1;
+                if(l == 1) dp[i][j] = true;                    //all single char is palindromes
+                else if(l == 2) dp[i][j] = (s[i] == s[j]);     //check both should same
+                else dp[i][j] = (s[i] == s[j] && dp[i+1][j-1] == true);  //check first and last char (between memoization works)
+
+                if(dp[i][j] == true) count++;
+            }
+        }
+        return count;
+    }
+    int countSubstrings(string s) {
+        memset(dp, -1, sizeof(dp));
+        return solveBluPr(s);                            //BluPr = blue print
+    }
+};
+/*
+Example 1:
+Input: s = "abc"
+Output: 3
+Explanation: Three palindromic strings: "a", "b", "c".
+
+Example 2:
+Input: s = "aaa"
+Output: 6
+Explanation: Six palindromic strings: "a", "a", "a", "aa", "aa", "aaa".
+*/
+
+
+//17. LONGEST PALINDROMIC SUBSTRING (Print)                            {T.C = O(N^2), S.C = O(N^2)}
+//MIK BLUE PRINT
+class Solution {
+public:
+    int dp[1005][1005];
+    void solveBluPr(string &s){
+        int n = s.length();
+        for(int l = 1; l <= n; l++){              //traverse each len of substrings
+            for(int i = 0 ; i+l-1 < n; i++){
+                int j = i+l-1;
+                if(l == 1) dp[i][j] = true;
+                else if(l == 2) dp[i][j] = (s[i] == s[j]);
+                else dp[i][j] = (s[i] == s[j] && dp[i+1][j-1] == true);   //substring len > 2
+            }
+        }
+    }
+    string longPalindromePr(string &s){
+        int n = s.length();
+        int maxLen = 0, startIdx = 0;
+        for(int i = 0 ; i < n; i++){
+            for(int j = i; j < n; j++){
+                if(dp[i][j] == true && (j-i+1) > maxLen){
+                    maxLen = j-i+1;
+                    startIdx = i;
+                }
+            }
+        }
+        return s.substr(startIdx, maxLen);
+    }
+    string longestPalindrome(string s) {
+        memset(dp, -1, sizeof(dp));
+        solveBluPr(s);
+
+        return longPalindromePr(s);             //print longest palindrome
+    }
+};
+
+
+//USING MEMOIZATION                                             {T.C = O(N^2), S.C = O(N^2)}
+class Solution {
+public:
+    int dp[1005][1005];
+    bool solveMem(string &s, int i, int j){
+        //base case
+        if(i >= j) return true;               //single char, or empty string is true
+
+        if(dp[i][j] != -1) return dp[i][j];
+
+        if(s[i] == s[j]) return dp[i][j] = solveMem(s, i+1, j-1);      //first , last match
+        return false;
+    }
+    string longestPalindrome(string s) {
+        memset(dp, -1, sizeof(dp));
+        int n = s.length();
+        int maxLen = 0;
+        int startIdx = 0;
+        for(int i = 0 ; i < n; i++){
+            for(int j = i ; j < n ; j++){
+                if(solveMem(s, i, j)){
+                    if(j-i+1 > maxLen){
+                        maxLen = j-i+1;
+                        startIdx = i;
+                    }
+                }
+            }
+        }
+        return s.substr(startIdx, maxLen);
+    }
+};
+
+
+//USING LCS PATTERN
+class Solution {
+public:
+    int dp[1005][1005];
+    int solveLCS(string &a, string &b){
+        int n = a.length();              //n == m
+        //1st row and col is 0
+        for(int i = 0; i < n+1; i++) dp[i][0] = 0;
+        for(int j = 0; j < n+1; j++) dp[0][j] = 0;
+
+        int maxLen = 0;
+        for(int i = 1; i < n+1; i++){
+            for(int j = 1; j < n+1; j++){
+                if(a[i-1] == b[j-1]){
+                    dp[i][j] = 1 + dp[i-1][j-1];
+                    maxLen = max(maxLen, dp[i][j]);
+                }else{
+                    dp[i][j] = 0;
+                }
+            }
+        }
+        // return dp[n][n];
+        return maxLen;
+    }
+    int longestPalindrome(string s) {
+        memset(dp, -1, sizeof(dp));
+        string copyStr = s;
+        reverse(copyStr.begin(), copyStr.end());
+        return solveLCS(s, copyStr);
+    }
+};
+/*
+Example 1:
+Input: s = "babad"
+Output: "bab"
+Explanation: "aba" is also a valid answer.
+
+Example 2:
+Input: s = "cbbd"
+Output: "bb"
+*/
+
+
+
+//18. LONGEST PALINDROMIC SUBSEQUENCE                          {T.C = O(N^2), S.C = O(N^2)}
+//USING LCS PATTERN
+class Solution {
+public:
+    int dp[1005][1005];
+    int solveLCS(string &a, string &b){
+        int n = a.length();            //n == m (same len)
+
+        //0th row & col should be zero
+        for(int i = 0 ; i < n+1; i++) dp[i][0] = 0;
+        for(int j = 0 ; j < n+1; j++) dp[0][j] = 0;
+        
+
+        for(int i = 1; i <= n; i++){ 
+            for(int j = 1; j <= n; j++){
+                if(a[i-1] == b[j-1]){
+                    dp[i][j] = 1 + dp[i-1][j-1];
+                }else{
+                    dp[i][j] = max(dp[i-1][j], dp[i][j-1]);
+                }
+            }
+        }
+        return dp[n][n];                         //at the end have maxLen subsequence
+    }
+    int longestPalindromeSubseq(string s) {
+        memset(dp, -1, sizeof(dp));
+        string copyStr = s;
+        reverse(copyStr.begin(), copyStr.end());
+        return solveLCS(s, copyStr);
+    }
+};
+/*
+Example 1:
+Input: s = "bbbab"
+Output: 4
+Explanation: One possible longest palindromic subsequence is "bbbb".
+
+Example 2:
+Input: s = "cbbd"
+Output: 2
+Explanation: One possible longest palindromic subsequence is "bb".
+*/
+
+
+//19. MINIMUM INSERTION STEPS TO MAKE A STRING PALINDROME
+//USING LCS                                                       {T.C = O(N^2), S.C = O(N^2)}
+class Solution {
+public:
+    int dp[501][501];
+    int solveLCS(string &a, string &b){
+        int n = a.length();               //n == m
+        //base case fill first row & col with 0
+        for(int i = 0 ; i < n+1 ; i++) dp[i][0] = 0;
+        for(int j = 0 ; j < n+1 ; j++) dp[0][j] = 0;
+
+        //fill remaining table
+        for(int i = 1 ; i < n+1 ; i++){
+            for(int j = 1 ; j < n+1 ; j++){
+                if(a[i-1] == b[j-1]){
+                    dp[i][j] = 1 + dp[i-1][j-1];
+                }else{
+                    dp[i][j] = max(dp[i-1][j], dp[i][j-1]);
+                }
+            }
+        }
+        return dp[n][n];
+    }
+    int longestPalindromeSubseq(string &s){                 //lps
+        string copyStr = s;
+        reverse(copyStr.begin(), copyStr.end());
+        return solveLCS(s, copyStr);                  //s is now reverse string
+    }
+    int minInsertions(string s) {
+        int n = s.length();
+        int LPS = longestPalindromeSubseq(s);
+        return n - LPS;                                 //min insertion req n-lps(all except already palindromes char)
+    }
+};
+/*
+Example 1:
+Input: s = "zzazz"
+Output: 0
+Explanation: The string "zzazz" is already palindrome we do not need any insertions.
+
+Example 2:
+Input: s = "mbadm"
+Output: 2
+Explanation: String can be "mbdadbm" or "mdbabdm".
+
+Example 3:
+Input: s = "leetcode"
+Output: 5
+Explanation: Inserting 5 characters the string becomes "leetcodocteel".
+*/
+
+
+//20. PALINDROME PARTITIONING 
+//USING BACKTRACKING                                              {T.C = O(N*2^N), S.C = O(N)}
+class Solution {
+public:
+    bool isPalindrome(string &s, int i, int j){
+        while(i < j){
+            if(s[i] != s[j]) return false;
+            i++, j--;
+        }
+        return true;
+    }
+    void solve(string &s, vector<vector<string>>&ans, vector<string>&temp, int i){
+        int n = s.length();
+        //base case
+        if(i == n) return ans.push_back(temp);
+
+        //push and pop (backtracking)
+        for(int j = i ; j < n; j++){
+            if(isPalindrome(s, i, j)){
+                temp.push_back(s.substr(i, j-i+1));
+                solve(s, ans, temp, j+1);                 //j+1 for next index
+                temp.pop_back();                          //backtrack
+            } 
+        }
+    }
+    vector<vector<string>> partition(string s) {
+        vector<vector<string>>ans;
+        vector<string>temp;
+        int n = s.length();
+        solve(s, ans, temp, 0);
+        return ans;
+    }
+};
+/*
+Example 1:
+Input: s = "aab"
+Output: [["a","a","b"],["aa","b"]]
+
+Example 2:
+Input: s = "a"
+Output: [["a"]]
+*/
+
+
+//21. PALINDROME PARTITIONING II
+//USING MEMOIZATION                                               {T.C = O(N^2), S.C = O(N^2)}
+class Solution {
+public:
+    int dp[2005];
+    bool isPalindrome(string &s, int i, int j){
+        while(i < j){
+            if(s[i] != s[j]) return false;
+            i++, j--;
+        }
+        return true;
+    }
+    int solveMem(string &s, int i){
+        int n = s.length();
+        //base case
+        if(i == n) return 0;
+
+        if(dp[i] != -1) return dp[i];
+
+        int minCost = INT_MAX, cost = 0;
+        for(int j = i ; j < n ; j++){
+            if(isPalindrome(s, i, j)){             //check string i to j
+                cost = 1 + solveMem(s, j+1);       //next i = j+1
+                minCost = min(cost, minCost);
+            } 
+        }
+        return dp[i] = minCost;
+    }
+    int minCut(string s) {
+        memset(dp, -1, sizeof(dp));
+        return solveMem(s, 0)-1;                       //0 = initial index, -1 = exclude partition of after end string
+    }
+};
+/*
+Example 1:
+Input: s = "aab"
+Output: 1
+Explanation: The palindrome partitioning ["aa","b"] could be produced using 1 cut.
+
+Example 2:
+Input: s = "a"
+Output: 0
+
+Example 3:
+Input: s = "ab"
+Output: 1
+*/
+
+
+//DP ON GRIDS-----------------------------------------------------------------------------------------------------
+//22. UNIQUE PATHS
+//USING MEMOIZATION                                              {T.C = O(N^2), S.C = O(N^2)}
+class Solution {
+public:
+    int dp[105][105];
+    int solveMem(int n, int m, int i, int j){
+        //base case
+        if(i >= n || j >= m) return 0;
+        if(i == n-1 && j == m-1) return 1;           //start == dest(1 way)
+
+        if(dp[i][j] != -1) return dp[i][j];
+
+        int down = solveMem(n, m, i+1, j);            //finding ways (not add 1 or val)
+        int right= solveMem(n, m, i, j+1);
+
+        return dp[i][j] = down + right;            
+    }
+    int uniquePaths(int m, int n) {
+        memset(dp, -1, sizeof(dp));
+        return solveMem(n, m, 0, 0);                //{0, 0} = starting cells
+    }
+};
+/*
+Example 1:
+Input: m = 3, n = 7
+Output: 28
+
+Example 2:
+Input: m = 3, n = 2
+Output: 3
+Explanation: From the top-left corner, there are a total of 3 ways to reach the bottom-right corner:
+1. Right -> Down -> Down
+2. Down -> Down -> Right
+3. Down -> Right -> Down
+*/
+
+
+//23. UNIQUE PATHS II 
+//USING MEMOIZATION                                            {T.C = O(N^2), S.C = O(N^2)}
+class Solution {
+public:
+    int dp[105][105];
+    int solveMem(vector<vector<int>>&grid, int n, int m, int i, int j){
+        //base case
+        if(i >= n || j >= m || grid[i][j] == 1) return 0;  //obstacles handles
+        if(i == n-1 && j == m-1) return 1;                 //start == destination
+
+        if(dp[i][j] != -1) return dp[i][j];
+
+        int down = solveMem(grid, n, m, i+1, j);
+        int right= solveMem(grid, n, m, i, j+1);
+
+        return dp[i][j] = down + right;
+    }
+    int uniquePathsWithObstacles(vector<vector<int>>& obstacleGrid) {
+        memset(dp, -1, sizeof(dp));
+        int n = obstacleGrid.size(), m = obstacleGrid[0].size();
+        return solveMem(obstacleGrid, n, m, 0, 0);    //{0, 0} first cell
+    }
+};
+/*
+Example 1:
+Input: obstacleGrid = [[0,0,0],[0,1,0],[0,0,0]]
+Output: 2
+Explanation: There is one obstacle in the middle of the 3x3 grid above.
+There are two ways to reach the bottom-right corner:
+1. Right -> Right -> Down -> Down
+2. Down -> Down -> Right -> Right
+
+Example 2:
+Input: obstacleGrid = [[0,1],[0,0]]
+Output: 1
+*/
