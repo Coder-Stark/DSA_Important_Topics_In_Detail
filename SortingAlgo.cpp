@@ -80,6 +80,36 @@ ONLINE  = NOT
 STABLE  = YES
 INPLACE = NOT
 */
+void merge(vector<int>&arr, int low , int mid , int high){
+    vector<int>temp;
+    int left = low;                               //[low -------mid]
+    int right = mid+1;                            //[mid+1 --- high]
+    while(left <= mid && right <= high){
+        if(arr[left] <= arr[right]){
+            temp.push_back(arr[left]);
+            left++;
+        }
+        //right is smaller
+        else{
+            temp.push_back(arr[right]);
+            right++;
+        }
+    }
+    while(left <= mid){
+        temp.push_back(arr[left]);
+        left++;
+    }
+    while(right <= high){
+        temp.push_back(arr[right]);
+        right++;
+    }
+
+    //put anser in array
+    for(int i = low ; i <= high ; i++){
+        arr[i] = temp[i-low];
+    }
+}
+
 int m = (l+r-1)/2;
 mergeSort(arr, l, m);
 mergeSort(arr, m+1, r);
@@ -98,6 +128,25 @@ ONLINE  = NOT
 STABLE  = NOT (RANDOM PICK AND POSITION CHANGE)
 INPLACE = YES
 */
+int partition(int arr[], int low, int high){
+    int pivot = low;
+    int i=low;
+    int j=high;
+    
+    while(i<j){
+        while(arr[i]<=arr[pivot]){
+            i++;
+        }
+        while(arr[j]>arr[pivot]){
+            j--;
+        }
+        if(i<j){
+            swap(arr[j], arr[i]);
+        }
+    }
+    swap(arr[j], arr[pivot]);
+    return j;
+}
 int pi = partition(arr, low, high);
 quickSort(arr, low, pi-1);
 quickSort(arr, pi+1, high);

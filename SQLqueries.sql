@@ -1,10 +1,31 @@
-SELECT title, industry FROM movies WHERE industry = "bollywood";
+-- Querying Bollywood movies
+SELECT title, industry FROM movies WHERE industry = 'Bollywood';
+-- Output:
+-- | title | industry |
+-- |-------|----------|
+-- | 3 Idiots | Bollywood |
+-- | Dangal | Bollywood |
+-- | RRR | Bollywood |
 
-SELECT COUNT(*) FROM movies WHERE industry = "bollywood";             --  count is function, * = argument (all col)
+-- Count Bollywood movies
+SELECT COUNT(*) FROM movies WHERE industry = 'Bollywood';
+-- Output: 3
 
+-- Select distinct industries
 SELECT DISTINCT industry FROM movies;
+-- Output:
+-- | industry |
+-- |----------|
+-- | Hollywood |
+-- | Bollywood |
 
-SELECT * FROM movies WHERE title like "%Thor%";      --% = wild car search
+-- Find movies with 'Thor' in the title
+SELECT * FROM movies WHERE title LIKE '%Thor%';
+-- Output:
+-- | movie_id | title | industry | studio | imdb_rating | release_year |
+-- |----------|-------------|------------|---------------|--------------|--------------|
+-- | 1 | Thor: Ragnarok | Hollywood | Marvel Studios | 7.9 | 2017 |
+
 
 SELECT * FROM movies;
 
@@ -94,55 +115,53 @@ END as revenueMill
 FROM financials;
 */
 
-JOINS
+-- JOINS
 SELECT * FROM movies;
-/*
+
 SELECT movies.movie_id, title, budget, revenue, currency, unit
 FROM movies JOIN financials
 ON movies.movie_id = financials.movie_id;
-*/
 
-/*  same as above just movies ==> m
-/*JOIN(BY DEFAULT INNER JOIN) (INERSECTION)
+
+--   same as above just movies ==> m
+-- JOIN(BY DEFAULT INNER JOIN) (INERSECTION)
 SELECT m.movie_id, title, budget, revenue, currency, unit
-FROM movies m JOIN financials f        by default INNER JOIN (ONLY TAKES WHOSE INTERSECTION(COMMON IN BOTH) ELSE IGNORE)
+FROM movies m JOIN financials f                      --by default INNER JOIN (ONLY TAKES WHOSE INTERSECTION(COMMON IN BOTH) ELSE IGNORE)
 ON m.movie_id = f.movie_id;
-*/
 
-/*LEFT JOIN (INTERSECTION + LEFT PART)
+-- LEFT JOIN (INTERSECTION + LEFT PART)
 SELECT m.movie_id, title, budget, revenue, currency, unit
 FROM movies m LEFT JOIN financials f
 ON m.movie_id = f.movie_id;
-*/
 
-/*RIGHT JOIN (INTERSECTION + RIGHT PART)
-SELECT f.movie_id, title, budget, revenue, currency, unit  f. (otherwise null cause title empty in movie)
+-- RIGHT JOIN (INTERSECTION + RIGHT PART)
+SELECT f.movie_id, title, budget, revenue, currency, unit    --f. (otherwise null cause title empty in movie)
 FROM movies m RIGHT JOIN financials f
 ON m.movie_id = f.movie_id;
-*/
 
 
-FULL JOIN USING UNION (LEFT + INTERSECTION + RIGHT)
-/*
+-- FULL JOIN USING UNION (LEFT + INTERSECTION + RIGHT)
 SELECT m.movie_id, title, budget, revenue, currency, unit
 FROM movies m LEFT JOIN financials f
 ON m.movie_id = f.movie_id
-UNION                              all left + intersection + right (col name should same)  
-SELECT f.movie_id, title, budget, revenue, currency, unit  f. (otherwise null cause title empty in movie)
+UNION                                                          --all left + intersection + right (col name should same)  
+SELECT f.movie_id, title, budget, revenue, currency, unit      --f. (otherwise null cause title empty in movie)
 FROM movies m RIGHT JOIN financials f
 ON m.movie_id = f.movie_id;
-*/
 
-OUTER JOIN => LEFT, RIGHT, FULL (ALL CALLED OUTER JOIN EXCEPT INNER JOIN)
+-- OUTER JOIN => LEFT, RIGHT, FULL (ALL CALLED OUTER JOIN EXCEPT INNER JOIN)
 
-/*USING 
+-- USING
 SELECT m.movie_id, title, budget, revenue, currency, unit
 FROM movies m LEFT JOIN financials f
 ON m.movie_id = f.movie_id
-UNION                              all left + intersection + right (col name should same)  
-SELECT f.movie_id, title, budget, revenue, currency, unit  f. (otherwise null cause title empty in movie)
+UNION                                                           --all left + intersection + right (col name should same)  
+SELECT f.movie_id, title, budget, revenue, currency, unit       --f. (otherwise null cause title empty in movie)
 FROM movies m RIGHT JOIN financials f
 USING (movie_id);               -- movie id is same in both movie and financial table
-*/ 
 
-WE CAN ADD MULTIPLE ATTRIBUTE OR JOIN USING 2 COL USING MULTIPLE ATTRIBUTE IN A BRACKET ();
+-- WE CAN ADD MULTIPLE ATTRIBUTE OR JOIN USING 2 COL USING MULTIPLE ATTRIBUTE IN A BRACKET ();
+
+
+-- QUESTIONS
+
